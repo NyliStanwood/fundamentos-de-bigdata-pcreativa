@@ -1,34 +1,157 @@
+# Operating System & Editor Files
 .DS_Store
-.ipynb_checkpoints
-mongodb
-spark
-hadoop
-mongo-hadoop
-lib/mongo*
-lib/pymongo_spark.py
-elasticsearch
-elasticsearch-hadoop
-lib
-ch03/static
-ch06/web/static
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.metals/
+.bloop/
+
+# Python & Virtual Environments
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+__pycache__/
 *.pyc
-tmp
-.idea
-kafka
-zeppelin
-ch05/scrape_faa.py
-models
-.vagrant
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.coverage
+.pytest_cache/
+.hypothesis/
+
+# Jupyter Notebook & IPython
+.ipynb_checkpoints
+.jupyter
+*.ipynb
+
+# Scala & SBT Build
+flight_prediction/target/
+flight_prediction/project/target/
+flight_prediction/project/project/target/
+flight_prediction/.bloop/
+flight_prediction/project/.bloop/
+*.class
+*.jar
+.metals
+
+# Data Files (Large, Generated, or Sensitive)
+data/origin_dest_distances.jsonl
+data/simple_flight_delay_features.jsonl.bz2
+data/*.csv
+data/*.tsv
+data/*.parquet
+data/*.orc
+data/*.json
+
+# Machine Learning Models (Large Artifacts)
+models/
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.pb
+*.ckpt
+
+# Third-Party Services & External Tools
+mongodb/
+spark/
+hadoop/
+elasticsearch/
+elasticsearch-hadoop/
+kafka/
+zeppelin/
+cassandra/
+janusgraph/
+mongo-hadoop/
+
+# Development & Temporary Files
+tmp/
+temp/
+*.tmp
+.vagrant/
+ghostdriver.log
+*.log
+*.pid
+
+# AWS & Cloud Credentials
 *.pem
 .reservation_id
 .ec2_hostname
 .ec2_deep_hostname
 .deep_reservation_id
-deep/data
-.vscode
-ghostdriver.log
-cassandra
-janusgraph
-deep
-data/origin_dest_distances.jsonl
-data/simple_flight_delay_features.jsonl.bz2
+
+# Legacy/Archived Directories
+deep/
+ch03/
+ch05/
+ch06/
+lib/
+
+# IDE Generated Files
+.bloop/
+metals.sbt
+
+# Docker & Containerization
+.dockerignore
+.docker/
+
+# Environment & Config (if containing secrets)
+.env
+.env.local
+.env.*.local
+
+# macOS Specific
+.AppleDouble
+.LSOverride
+
+# Node.js (if applicable)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS-Specific Temp Directories
+.tmp/
+.cache/
+
+# Airflow (if present)
+airflow/logs/
+airflow/plugins/
+airflow/dags/__pycache__/
+flight_prediction/project/target/**/*
+flight_prediction/project/target/scala-2.12/sbt-1.0/update/update_cache_2.12/output
+flight_prediction/project/target/streams/_global/_global/csrLogger/_global/streams/out
+flight_prediction/project/target/streams/_global/dependencyPositions/_global/streams/update_cache_2.12/input_dsp
+flight_prediction/project/target/streams/_global/update/_global/streams/out
+flight_prediction/project/target/streams/compile/_global/_global/compileBinaryFileInputs/previous
+flight_prediction/project/target/streams/compile/dependencyClasspath/_global/streams/export
+flight_prediction/project/target/streams/compile/exportedProducts/_global/streams/export
+
+flight_prediction/project/project/project/target/config-classes/$9c436159ad694f738665.cache
+flight_prediction/project/project/project/target/**/*
