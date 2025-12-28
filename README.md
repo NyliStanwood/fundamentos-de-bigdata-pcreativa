@@ -62,7 +62,66 @@ We create an entire realtime predictive system with a web front-end to submit pr
 
 ![Predicting Flight Delays UI](images/predicting_flight_kafka_waiting.png)
 
-## Downloading Data
+## Running with Docker (Recommended for Windows)
+
+This project can be easily run using Docker and Docker Compose, which handles all dependencies.
+
+### Prerequisites
+- [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
+- Minimum 8GB RAM allocated to Docker
+- At least 20GB free disk space
+
+### Quick Start with Docker
+
+1. From the `practica_creativa` directory, start all services:
+
+```powershell
+docker-compose up -d
+```
+
+2. Wait for services to be healthy (1-2 minutes):
+
+```powershell
+docker-compose ps
+```
+
+You should see all services with status "healthy" or "running".
+
+3. Access the web application:
+
+```
+http://localhost:5000/flights/delays/predict_kafka
+```
+
+4. View logs from any service:
+
+```powershell
+docker-compose logs -f flask-app    # Web application
+docker-compose logs -f spark-master # Spark
+docker-compose logs -f mongodb      # Database
+docker-compose logs -f kafka        # Message queue
+```
+
+5. Stop all services:
+
+```powershell
+docker-compose down
+```
+
+6. Stop and remove all data (clean slate):
+
+```powershell
+docker-compose down -v
+```
+
+### Access Services Directly
+
+- **MongoDB**: `mongodb://localhost:27017` (user: admin, password: password)
+- **Kafka**: `localhost:9092`
+- **Spark Master Web UI**: `http://localhost:8080`
+- **Flask Web App**: `http://localhost:5000`
+
+## Downloading Data (Manual Method)
 
 Once the server comes up, download the data and you are ready to go. First change directory into the `practica_creativa` directory.
 
@@ -74,8 +133,14 @@ Now download the data.
 
 For the [Realtime Predictive Analytics](http://datasyndrome.com/video) run:
 
+**On Linux/macOS:**
 ```
 resources/download_data.sh
+```
+
+**On Windows (PowerShell):**
+```powershell
+powershell -ExecutionPolicy Bypass -File resources\download_data.ps1
 ```
 
 ## Installation
