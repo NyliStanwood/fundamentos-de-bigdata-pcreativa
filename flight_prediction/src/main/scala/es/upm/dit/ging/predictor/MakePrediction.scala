@@ -19,7 +19,7 @@ object MakePrediction {
     import spark.implicits._
 
     //Load the arrival delay bucketizer
-    val base_path= "/Users/admin/Downloads/practica_creativa"
+    val base_path= "/home/ibdn/practica_creativa"
     val arrivalBucketizerPath = "%s/models/arrival_bucketizer_2.0.bin".format(base_path)
     print(arrivalBucketizerPath.toString())
     val arrivalBucketizer = Bucketizer.load(arrivalBucketizerPath)
