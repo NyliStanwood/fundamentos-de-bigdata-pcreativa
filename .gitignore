@@ -144,14 +144,3 @@ yarn-error.log
 airflow/logs/
 airflow/plugins/
 airflow/dags/__pycache__/
-flight_prediction/project/target/**/*
-flight_prediction/project/target/scala-2.12/sbt-1.0/update/update_cache_2.12/output
-flight_prediction/project/target/streams/_global/_global/csrLogger/_global/streams/out
-flight_prediction/project/target/streams/_global/dependencyPositions/_global/streams/update_cache_2.12/input_dsp
-flight_prediction/project/target/streams/_global/update/_global/streams/out
-flight_prediction/project/target/streams/compile/_global/_global/compileBinaryFileInputs/previous
-flight_prediction/project/target/streams/compile/dependencyClasspath/_global/streams/export
-flight_prediction/project/target/streams/compile/exportedProducts/_global/streams/export
-
-flight_prediction/project/project/project/target/config-classes/$9c436159ad694f738665.cache
-flight_prediction/project/project/project/target/**/*
