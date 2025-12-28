@@ -1,0 +1,33 @@
+FROM amazoncorretto:17-alpine3.17
+
+# Set Kafka version
+ENV KAFKA_VERSION=kafka_2.12-3.9.0
+ENV KAFKA_HOME=/opt/kafka
+
+# Install required packages
+RUN apk add --no-cache wget bash
+
+# Download and install Kafka
+RUN wget -q https://downloads.apache.org/kafka/3.9.0/${KAFKA_VERSION}.tgz && \
+    tar -xzf ${KAFKA_VERSION}.tgz && \
+    mv ${KAFKA_VERSION} ${KAFKA_HOME} && \
+    rm ${KAFKA_VERSION}.tgz
+
+WORKDIR ${KAFKA_HOME}
+
+# Generate cluster ID and format storage
+RUN KAFKA_CLUSTER_ID=$(bin/kafka-storage.sh random-uuid) && \
+    bin/kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c config/kraft/server.properties
+
+# Expose Kafka port
+EXPOSE 9092
+
+# Create startup script
+RUN printf '#!/bin/bash\n\
+bin/kafka-server-start.sh config/kraft/server.properties &\n\
+sleep 10\n\
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic flight-delay-ml-request\n\
+tail -f /dev/null\n' > /start-kafka.sh && \
+    chmod +x /start-kafka.sh
+
+CMD ["/bin/bash", "/start-kafka.sh"]
