@@ -4,6 +4,15 @@ services:
     container_name: kafka-server
     ports:
       - "9092:9092"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "1.0"
+    mem_limit: "1g"
+    pids_limit: 1024
     environment:
       KAFKA_NODE_ID: 1 #Unique identifier for this node in the KRaft cluster
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
@@ -24,6 +33,15 @@ services:
       - kafka
     entrypoint: /bin/sh
     command: -c "sleep 10 && /opt/kafka/bin/kafka-topics.sh --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic flight-delay-ml-request --if-not-exists"
+    restart: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    cpus: "0.25"
+    mem_limit: "256m"
+    pids_limit: 256
     networks:
       - flight-network
 
@@ -35,6 +53,15 @@ services:
     container_name: mongo
     ports:
       - "27017:27017"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "1.5"
+    mem_limit: "2g"
+    pids_limit: 2048
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -49,6 +76,15 @@ services:
       context: .
       dockerfile: Dockerfile.training
     container_name: ml-training
+    restart: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "1.0"
+    mem_limit: "2g"
+    pids_limit: 1024
     volumes:
       - ./resources:/resources
       - ./data:/data
@@ -66,6 +102,15 @@ services:
     ports:
       - "8080:8080"
       - "7077:7077"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "1.0"
+    mem_limit: "1g"
+    pids_limit: 1024
     environment:
       SPARK_MODE: master
       SPARK_RPC_AUTHENTICATION_ENABLED: "no"
@@ -85,12 +130,23 @@ services:
       - spark-master
     ports:
       - "8081:8081"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "1.0"
+    mem_limit: "2g"
+    pids_limit: 2048
     environment:
       SPARK_MODE: worker
       SPARK_MASTER_URL: spark://spark-master:7077
       SPARK_RPC_AUTHENTICATION_ENABLED: "no"
       SPARK_RPC_ENCRYPTION_ENABLED: "no"
       SPARK_SSL_ENABLED: "no"
+      SPARK_WORKER_CORES: "1"
+      SPARK_WORKER_MEMORY: "1g"
     volumes:
       - ./models:/practica_creativa/models
     networks:
@@ -107,12 +163,23 @@ services:
       - spark-master
     ports:
       - "8082:8081"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "1.0"
+    mem_limit: "2g"
+    pids_limit: 2048
     environment:
       SPARK_MODE: worker
       SPARK_MASTER_URL: spark://spark-master:7077
       SPARK_RPC_AUTHENTICATION_ENABLED: "no"
       SPARK_RPC_ENCRYPTION_ENABLED: "no"
       SPARK_SSL_ENABLED: "no"
+      SPARK_WORKER_CORES: "1"
+      SPARK_WORKER_MEMORY: "1g"
     volumes:
       - ./models:/practica_creativa/models
     networks:
@@ -129,6 +196,15 @@ services:
       - spark-worker-2
       - mongo
       - kafka
+    restart: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "1.0"
+    mem_limit: "1g"
+    pids_limit: 1024
     environment:
       SPARK_MASTER_URL: spark://spark-master:7077
       MONGO_HOST: mongo
@@ -156,8 +232,17 @@ services:
       - ./resources:/resources
     ports:
       - "5001:5001"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "0.5"
+    mem_limit: "512m"
+    pids_limit: 512
     command: >
-      sh -c "sleep 15 &&
+      sh -c "sleep 25 &&
              pip install -r /resources/requirements.txt &&
              python predict_flask.py"
     networks:
