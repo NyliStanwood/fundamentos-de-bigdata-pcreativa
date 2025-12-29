@@ -76,6 +76,27 @@ services:
     networks:
       - flight-network
 
+  flask:
+    image: python:3.9
+    container_name: flask-app
+    depends_on:
+      - mongo
+      - kafka
+      - kafka-init
+    working_dir: /resources/web
+    environment:
+      PROJECT_HOME: /resources
+    volumes:
+      - ./resources:/resources
+    ports:
+      - "5001:5001"
+    command: >
+      sh -c "sleep 15 &&
+             pip install -r /resources/requirements.txt &&
+             python predict_flask.py"
+    networks:
+      - flight-network
+
 networks:
   flight-network:
     driver: bridge
