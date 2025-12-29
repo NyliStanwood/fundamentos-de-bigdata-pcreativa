@@ -2,9 +2,12 @@
 
 import sys, os, re
 from os import environ
+from datetime import datetime
 
 # Pass date and base path to main() from airflow
 def main(base_path):
+  start_time = datetime.utcnow()
+  print(f"[ {start_time.isoformat()} ] Starting training pipeline")
   
   # Default to "."
   try: base_path
@@ -56,15 +59,17 @@ def main(base_path):
   input_path = "{}/data/simple_flight_delay_features.jsonl.bz2".format(
     base_path
   )
+  print(f"Loading data from {input_path}")
   features = spark.read.json(input_path, schema=schema)
   features.first()
+  print("Loaded input dataset")
   
   #
   # Check for nulls in features before using Spark ML
   #
   null_counts = [(column, features.where(features[column].isNull()).count()) for column in features.columns]
   cols_with_nulls = filter(lambda x: x[1] > 0, null_counts)
-  print(list(cols_with_nulls))
+  print(f"Columns with nulls: {list(cols_with_nulls)}")
   
   #
   # Add a Route variable to replace FlightNum
@@ -78,6 +83,7 @@ def main(base_path):
       features.Dest
     )
   )
+  print("Added Route column")
   features_with_route.show(6)
   
   #
@@ -96,10 +102,12 @@ def main(base_path):
   # Save the bucketizer
   arrival_bucketizer_path = "{}/models/arrival_bucketizer_2.0.bin".format(base_path)
   arrival_bucketizer.write().overwrite().save(arrival_bucketizer_path)
+  print(f"Saved bucketizer to {arrival_bucketizer_path}")
   
   # Apply the bucketizer
   ml_bucketized_features = arrival_bucketizer.transform(features_with_route)
   ml_bucketized_features.select("ArrDelay", "ArrDelayBucket").show()
+  print("Bucketized features previewed")
   
   #
   # Extract features tools in with pyspark.ml.feature
@@ -125,6 +133,7 @@ def main(base_path):
       column
     )
     string_indexer_model.write().overwrite().save(string_indexer_output_path)
+    print(f"Saved StringIndexer for {column} to {string_indexer_output_path}")
   
   # Combine continuous, numeric fields with indexes of nominal ones
   # ...into one feature vector
@@ -139,10 +148,12 @@ def main(base_path):
     outputCol="Features_vec"
   )
   final_vectorized_features = vector_assembler.transform(ml_bucketized_features)
+  print("Assembled feature vector")
   
   # Save the numeric vector assembler
   vector_assembler_path = "{}/models/numeric_vector_assembler.bin".format(base_path)
   vector_assembler.write().overwrite().save(vector_assembler_path)
+  print(f"Saved vector assembler to {vector_assembler_path}")
   
   # Drop the index columns
   for column in index_columns:
@@ -161,12 +172,14 @@ def main(base_path):
     maxMemoryInMB=1024
   )
   model = rfc.fit(final_vectorized_features)
+  print("Trained RandomForest model")
   
   # Save the new model over the old one
   model_output_path = "{}/models/spark_random_forest_classifier.flight_delays.5.0.bin".format(
     base_path
   )
   model.write().overwrite().save(model_output_path)
+  print(f"Saved model to {model_output_path}")
   
   # Evaluate model using test data
   predictions = model.transform(final_vectorized_features)
@@ -185,6 +198,10 @@ def main(base_path):
   
   # Check a sample
   predictions.sample(False, 0.001, 18).orderBy("CRSDepTime").show(6)
+  end_time = datetime.utcnow()
+  duration = (end_time - start_time).total_seconds()
+  print(f"[ {end_time.isoformat()} ] Training pipeline completed")
+  print(f"Duration: {duration:.2f} seconds")
 
 if __name__ == "__main__":
   main(sys.argv[1])

@@ -1,0 +1,13 @@
+# Requirements for train_spark_mllib_model.py
+
+# PySpark - Apache Spark Python API
+# pyspark>=3.0.0
+
+# findspark - Helps find Spark installation
+findspark
+numpy
+
+# Note: The following standard library modules are used but don't need installation:
+# - sys (built-in)
+# - os (built-in)
+# - re (built-in)

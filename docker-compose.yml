@@ -29,6 +29,18 @@ services:
     networks:
       - flight-network
 
+  training:
+    build:
+      context: .
+      dockerfile: Dockerfile.training
+    container_name: ml-training
+    volumes:
+      - ./resources:/resources
+      - ./data:/data
+      - ./models:/models
+    networks:
+      - flight-network
+
 networks:
   flight-network:
     driver: bridge
