@@ -1,14 +1,29 @@
 services:
   kafka:
-    build:
-      context: .
-      dockerfile: Dockerfile.kafka
+    image: apache/kafka:3.9.0
     container_name: kafka-server
     ports:
       - "9092:9092"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_NODE_ID: 1 #Unique identifier for this node in the KRaft cluster
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_PROCESS_ROLES: "broker,controller" #Define the roles of this node
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093" #Define the controller quorum voters
+      KAFKA_LISTENERS: "PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER" #Define the listener names for the controller
+    networks:
+      - flight-network
+
+  ##create Kafka topic for flight-delay-ml-request in --bootstrap-server kafka:9092 before dying
+  kafka-init:
+    image: apache/kafka:3.9.0
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    entrypoint: /bin/sh
+    command: -c "sleep 10 && /opt/kafka/bin/kafka-topics.sh --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic flight-delay-ml-request --if-not-exists"
     networks:
       - flight-network
 
