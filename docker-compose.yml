@@ -56,6 +56,26 @@ services:
     networks:
       - flight-network
 
+  sparksubmit:
+    build:
+      context: .
+      dockerfile: Dockerfile.sparksubmit
+    container_name: spark-flight-predictor
+    depends_on:
+      - mongo
+      - kafka
+    environment:
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      MONGO_USER: root
+      MONGO_PASS: example
+      MONGO_AUTH_DB: admin
+      MONGO_DB: agile_data_science
+    volumes:
+      - ./models:/practica_creativa/models
+    networks:
+      - flight-network
+
 networks:
   flight-network:
     driver: bridge

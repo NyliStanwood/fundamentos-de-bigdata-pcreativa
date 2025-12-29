@@ -1,0 +1,67 @@
+# Dockerfile for Spark Submit - Flight Prediction with Build Tools
+FROM apache/spark:3.5.3
+
+# Switch to root user
+USER root
+
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies for SDKMAN and build tools
+RUN apt-get update && \
+    apt-get install -y curl zip unzip wget procps git bash ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install SDKMAN
+RUN curl -s "https://get.sdkman.io" | bash
+
+# Install Java 8, Scala 2.12.10, and sbt via SDKMAN
+RUN bash -c "source /root/.sdkman/bin/sdkman-init.sh && \
+    sdk install java 8.0.302-open && \
+    sdk install scala 2.12.10 && \
+    sdk install sbt 1.11.7 && \
+    sdk default java 8.0.302-open && \
+    sdk default scala 2.12.10 && \
+    sdk default sbt 1.11.7"
+
+# Set JAVA_HOME and JDK_HOME environment variables for Java 8
+ENV JAVA_HOME=/root/.sdkman/candidates/java/8.0.302-open
+ENV JDK_HOME=/root/.sdkman/candidates/java/8.0.302-open
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Set Scala and sbt paths
+ENV SCALA_HOME=/root/.sdkman/candidates/scala/2.12.10
+ENV SBT_HOME=/root/.sdkman/candidates/sbt/current
+ENV PATH=$SCALA_HOME/bin:$SBT_HOME/bin:$PATH
+
+# Spark is already configured in the base image
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+
+# Set working directory
+WORKDIR /practica_creativa
+
+# Copy the entire repository into the container
+COPY . /practica_creativa/
+
+# Create models directory if it doesn't exist
+RUN mkdir -p /models
+
+# Build the Scala project with sbt
+WORKDIR /practica_creativa/flight_prediction
+RUN bash -c "source /root/.sdkman/bin/sdkman-init.sh && sbt clean package"
+
+# Environment variables for MongoDB connection
+ENV MONGO_HOST=mongo
+ENV MONGO_PORT=27017
+ENV MONGO_USER=root
+ENV MONGO_PASS=example
+ENV MONGO_AUTH_DB=admin
+ENV MONGO_DB=agile_data_science
+
+# Default command: run spark-submit
+CMD ["spark-submit", \
+     "--class", "es.upm.dit.ging.predictor.MakePrediction", \
+     "--master", "local[*]", \
+     "--packages", "org.mongodb.spark:mongo-spark-connector_2.12:10.4.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2", \
+     "target/scala-2.12/flight_prediction_2.12-0.1.jar"]
