@@ -14,7 +14,7 @@ object MakePrediction {
     val spark = SparkSession
       .builder
       .appName("StructuredNetworkWordCount")
-      .master("local[*]")
+      // .master("local[*]")
       .getOrCreate()
     import spark.implicits._
 
@@ -148,7 +148,7 @@ object MakePrediction {
       .outputMode("append")
 
     // run the query
-    val query = dataStreamWriter.start()
+    val query = dataStreamWriter.start() 
     // Console Output for predictions
 
     val consoleOutput = finalPredictions.writeStream

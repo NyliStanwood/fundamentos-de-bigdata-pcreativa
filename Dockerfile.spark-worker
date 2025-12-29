@@ -1,0 +1,45 @@
+# Dockerfile for Spark Worker
+FROM apache/spark:3.5.3
+
+# Switch to root user
+USER root
+
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y curl zip unzip wget procps git bash ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install SDKMAN
+RUN curl -s "https://get.sdkman.io" | bash
+
+# Install Java 8 via SDKMAN
+RUN bash -c "source /root/.sdkman/bin/sdkman-init.sh && \
+    sdk install java 8.0.302-open && \
+    sdk default java 8.0.302-open"
+
+# Set JAVA_HOME and JDK_HOME environment variables for Java 8
+ENV JAVA_HOME=/root/.sdkman/candidates/java/8.0.302-open
+ENV JDK_HOME=/root/.sdkman/candidates/java/8.0.302-open
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Spark is already configured in the base image
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+
+# Spark Worker configuration
+ENV SPARK_MODE=worker
+ENV SPARK_RPC_AUTHENTICATION_ENABLED=no
+ENV SPARK_RPC_ENCRYPTION_ENABLED=no
+ENV SPARK_SSL_ENABLED=no
+
+# Expose port
+EXPOSE 8081
+
+# Accept SPARK_MASTER_URL as environment variable
+ENV SPARK_MASTER_URL=spark://spark-master:7077
+
+# Start Spark Worker
+CMD spark-class org.apache.spark.deploy.worker.Worker $SPARK_MASTER_URL --webui-port 8081
