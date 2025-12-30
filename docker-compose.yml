@@ -10,8 +10,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    cpus: "1.0"
-    mem_limit: "1g"
+    cpus: "2.0"
+    mem_limit: "2g"
     pids_limit: 1024
     environment:
       KAFKA_NODE_ID: 1 #Unique identifier for this node in the KRaft cluster
@@ -39,7 +39,7 @@ services:
       options:
         max-size: "5m"
         max-file: "2"
-    cpus: "0.25"
+    cpus: "0.5"
     mem_limit: "256m"
     pids_limit: 256
     networks:
@@ -59,7 +59,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    cpus: "1.5"
+    cpus: "2.0"
     mem_limit: "2g"
     pids_limit: 2048
     environment:
@@ -72,26 +72,26 @@ services:
     networks:
       - flight-network
 
-  # training:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.training
-  #   container_name: ml-training
-  #   restart: on-failure
-  #   logging:
-  #     driver: json-file
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   cpus: "1.0"
-  #   mem_limit: "2g"
-  #   pids_limit: 1024
-  #   volumes:
-  #     - ./resources:/resources
-  #     - ./data:/data
-  #     - ./models:/models
-  #   networks:
-  #     - flight-network
+  training:
+    build:
+      context: .
+      dockerfile: Dockerfile.training
+    container_name: ml-training
+    restart: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "1.0"
+    mem_limit: "2g"
+    pids_limit: 1024
+    volumes:
+      - ./resources:/resources
+      - ./data:/data
+      - ./models:/models
+    networks:
+      - flight-network
 
   # Spark Master
   spark-master:
@@ -137,7 +137,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    cpus: "1.0"
+    cpus: "2.0"
     mem_limit: "2g"
     pids_limit: 2048
     environment:
@@ -146,45 +146,45 @@ services:
       SPARK_RPC_AUTHENTICATION_ENABLED: "no"
       SPARK_RPC_ENCRYPTION_ENABLED: "no"
       SPARK_SSL_ENABLED: "no"
-      SPARK_WORKER_CORES: "1"
-      SPARK_WORKER_MEMORY: "1g"
+      SPARK_WORKER_CORES: "2"
+      SPARK_WORKER_MEMORY: "2g"
     volumes:
       - ./models:/practica_creativa/models
     networks:
       - flight-network
 
-  # # Spark Worker 2
-  # spark-worker-2:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.spark-worker
-  #   image: spark-worker-2:3.5.3
-  #   container_name: spark-worker-2
-  #   depends_on:
-  #     - spark-master
-  #   ports:
-  #     - "8082:8081"
-  #   restart: unless-stopped
-  #   logging:
-  #     driver: json-file
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   cpus: "1.0"
-  #   mem_limit: "2g"
-  #   pids_limit: 2048
-  #   environment:
-  #     SPARK_MODE: worker
-  #     SPARK_MASTER_URL: spark://spark-master:7077
-  #     SPARK_RPC_AUTHENTICATION_ENABLED: "no"
-  #     SPARK_RPC_ENCRYPTION_ENABLED: "no"
-  #     SPARK_SSL_ENABLED: "no"
-  #     SPARK_WORKER_CORES: "1"
-  #     SPARK_WORKER_MEMORY: "1g"
-  #   volumes:
-  #     - ./models:/practica_creativa/models
-  #   networks:
-  #     - flight-network
+  # Spark Worker 2
+  spark-worker-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark-worker
+    image: spark-worker-2:3.5.3
+    container_name: spark-worker-2
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8081"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "2.0"
+    mem_limit: "2g"
+    pids_limit: 2048
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
+      SPARK_RPC_ENCRYPTION_ENABLED: "no"
+      SPARK_SSL_ENABLED: "no"
+      SPARK_WORKER_CORES: "2"
+      SPARK_WORKER_MEMORY: "2g"
+    volumes:
+      - ./models:/practica_creativa/models
+    networks:
+      - flight-network
 
   sparksubmit:
     build:
@@ -194,7 +194,7 @@ services:
     depends_on:
       - spark-master
       - spark-worker-1
-      # - spark-worker-2
+      - spark-worker-2
       - mongo
       - kafka
     restart: on-failure
@@ -203,8 +203,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    cpus: "1.0"
-    mem_limit: "1g"
+    cpus: "2.0"
+    mem_limit: "2g"
     pids_limit: 1024
     environment:
       SPARK_MASTER_URL: spark://spark-master:7077
@@ -239,8 +239,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    cpus: "0.5"
-    mem_limit: "512m"
+    cpus: "1.0"
+    mem_limit: "1g"
     pids_limit: 512
     command: >
       sh -c "sleep 25 &&
