@@ -1,0 +1,120 @@
+# Cassandra Configuration for Docker Container
+# This is a simplified configuration suitable for development/testing
+
+# Cluster Name
+cluster_name: "flight_prediction_cluster"
+
+# This defines the number of tokens randomly assigned to this node on the ring
+num_tokens: 256
+
+# Listener address - used for inter-node communication
+listen_address: cassandra
+
+# Broadcast address for inter-node communication
+broadcast_address: cassandra
+
+# RPC (client) addresses
+rpc_address: 0.0.0.0
+broadcast_rpc_address: cassandra
+
+# Seed provider
+seed_provider:
+  - class_name: org.apache.cassandra.locator.SimpleSeedProvider
+    parameters:
+      - seeds: "cassandra"
+
+# Data File Directories
+data_file_directories:
+  - /var/lib/cassandra/data
+
+# Commit Log Directory
+commitlog_directory: /var/lib/cassandra/commitlog
+
+# Commit log synchronization
+commitlog_sync: periodic
+commitlog_sync_period_in_ms: 10000
+
+# Saved Caches Directory
+saved_caches_directory: /var/lib/cassandra/saved_caches
+
+# Endpoint Snitch - determines replication strategy
+endpoint_snitch: GossipingPropertyFileSnitch
+
+# Replication Strategy
+partitioner: org.apache.cassandra.dht.Murmur3Partitioner
+
+# Enable/Disable native transport (CQL)
+start_native_transport: true
+
+# CQL Native Transport Port
+native_transport_port: 9042
+
+# Storage Port
+storage_port: 7000
+
+# SSL Storage Port
+ssl_storage_port: 7001
+
+# Authenticator for user authentication
+authenticator: PasswordAuthenticator
+
+# Authorizer
+authorizer: AllowAllAuthorizer
+
+# Role Manager
+role_manager: CassandraRoleManager
+
+# File Permission Mode
+file_cache_size_in_mb: 512
+
+# Memtable allocation type
+memtable_allocation_type: heap_buffers
+
+# Row cache size
+row_cache_size_in_mb: 0
+row_cache_class_name: org.apache.cassandra.cache.SliceQueryCache
+
+# Key cache size
+key_cache_size_in_mb: 100
+
+# Counter cache size
+counter_cache_size_in_mb: 100
+
+# Tombstone warn/failure threshold
+tombstone_warn_threshold: 1000
+tombstone_failure_threshold: 100000
+
+# Read timeout
+read_request_timeout_in_ms: 5000
+
+# Write timeout
+write_request_timeout_in_ms: 2000
+
+# Counter write timeout
+counter_write_request_timeout_in_ms: 5000
+
+# CAS (Compare and Set) timeout
+cas_contention_timeout_in_ms: 1000
+
+# Dynamic snitch
+dynamic_snitch: false
+
+# Hinted Handoff
+hinted_handoff_enabled: false
+
+# Seeds for token assignment
+auto_bootstrap: true
+
+# Compaction settings
+compaction_throughput_mb_per_sec: 16
+concurrent_compactors: 1
+
+# GC settings (optional - let Docker/JVM handle it)
+gc_warn_threshold_in_ms: 1000
+
+# Network topology
+server_encryption_options:
+  internode_encryption: none
+
+client_encryption_options:
+  enabled: false

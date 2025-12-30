@@ -45,6 +45,46 @@ services:
     networks:
       - flight-network
 
+  cassandra:
+    build:
+      context: .
+      dockerfile: Dockerfile.cassandra
+    image: cassandra-custom:4.1.10
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+      - "7199:7199"
+      - "9160:9160"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cpus: "2.0"
+    mem_limit: "2g"
+    pids_limit: 2048
+    environment:
+      CASSANDRA_CLUSTER_NAME: flight_prediction_cluster
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+      - ./resources:/resources
+      - ./data:/data
+    networks:
+      - flight-network
+    healthcheck:
+      test:
+        ["CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'describe cluster'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   mongo:
     build:
       context: .
@@ -72,26 +112,26 @@ services:
     networks:
       - flight-network
 
-  training:
-    build:
-      context: .
-      dockerfile: Dockerfile.training
-    container_name: ml-training
-    restart: on-failure
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    cpus: "1.0"
-    mem_limit: "2g"
-    pids_limit: 1024
-    volumes:
-      - ./resources:/resources
-      - ./data:/data
-      - ./models:/models
-    networks:
-      - flight-network
+  # training:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.training
+  #   container_name: ml-training
+  #   restart: on-failure
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   cpus: "1.0"
+  #   mem_limit: "2g"
+  #   pids_limit: 1024
+  #   volumes:
+  #     - ./resources:/resources
+  #     - ./data:/data
+  #     - ./models:/models
+  #   networks:
+  #     - flight-network
 
   # Spark Master
   spark-master:
@@ -255,3 +295,4 @@ networks:
 
 volumes:
   mongo_data:
+  cassandra_data:

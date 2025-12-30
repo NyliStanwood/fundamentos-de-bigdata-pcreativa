@@ -1,0 +1,2 @@
+USE agile_data_science;
+SELECT * FROM origin_dest_distances LIMIT 10;
