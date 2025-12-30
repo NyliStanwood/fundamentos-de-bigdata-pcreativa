@@ -5,7 +5,7 @@
 
   <p class="lead" style="margin: 10px; margin-left: 0px;">
     <!-- Airline Name and website-->
-    Predicting Flight Delays with Kafka
+    Predicting Flight Delays with Kafka (WebSocket Real-time)
   </p>
 
   <!-- Generate form from search_config and request args -->
@@ -29,6 +29,9 @@
       <p>Delay: <span id="result" style="display: inline-block;"></span></p>
   </div>
 
-  <!-- Load our form processing javascript -->
-  <script src="/static/flight_delay_predict_polling.js"></script>
+  <!-- Load Socket.IO client library -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  
+  <!-- Load our WebSocket form processing javascript -->
+  <script src="/static/flight_delay_predict_websocket.js"></script>
 {% endblock %}

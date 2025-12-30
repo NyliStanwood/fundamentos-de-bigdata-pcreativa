@@ -2,14 +2,16 @@ package es.upm.dit.ging.predictor
 import com.mongodb.spark._
 import org.apache.spark.ml.classification.RandomForestClassificationModel
 import org.apache.spark.ml.feature.{Bucketizer, StringIndexerModel, VectorAssembler}
-import org.apache.spark.sql.functions.{concat, from_json, lit}
+import org.apache.spark.sql.functions.{concat, from_json, lit, to_json, struct, col}
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object MakePrediction {
 
   def main(args: Array[String]): Unit = {
-    println("Fligth predictor starting...")
+    println("\n" + "="*80)
+    println("*** FLIGHT DELAY PREDICTION ENGINE STARTING ***")
+    println("="*80 + "\n")
 
     val spark = SparkSession
       .builder
@@ -18,6 +20,8 @@ object MakePrediction {
       .getOrCreate()
     import spark.implicits._
 
+    println(">>> Loading ML models and configurations...")
+    
     //Load the arrival delay bucketizer
     // val base_path= "/home/ibdn/practica_creativa"
     val base_path= "/practica_creativa"
@@ -40,6 +44,9 @@ object MakePrediction {
     val randomForestModelPath = "%s/models/spark_random_forest_classifier.flight_delays.5.0.bin".format(
       base_path)
     val rfc = RandomForestClassificationModel.load(randomForestModelPath)
+
+    println("✓ ML Models loaded successfully\n")
+    println(">>> Starting Kafka consumer for flight-delay-ml-request topic...")
 
     //Process Prediction Requests in Streaming
     val df = spark
@@ -137,7 +144,12 @@ object MakePrediction {
     // Inspect the output
     finalPredictions.printSchema()
 
-    // define a streaming query
+    println("\n" + "="*80)
+    println("*** INITIATING OUTPUT STREAMS ***")
+    println("="*80 + "\n")
+
+    // define a streaming query for MongoDB
+    println(">>> Configuring MongoDB output stream...")
     val dataStreamWriter = finalPredictions
       .writeStream
       .format("mongodb")
@@ -146,15 +158,42 @@ object MakePrediction {
       .option("checkpointLocation", "/tmp")
       .option("spark.mongodb.collection", "flight_delay_ml_response")
       .outputMode("append")
+    
+    // run the MongoDB query
+    println(">>> STARTING MONGODB WRITE STREAM...")
+    val query = dataStreamWriter.start()
+    println("✓✓✓ PREDICTIONS NOW POSTED TO MONGODB ✓✓✓\n")
 
-    // run the query
-    val query = dataStreamWriter.start() 
+    // Write predictions to Kafka topic
+    println(">>> Configuring Kafka output stream...")
+    val kafkaOutput = finalPredictions.selectExpr("to_json(struct(*)) as value")
+    val kafkaStreamWriter = kafkaOutput
+      .writeStream
+      .format("kafka")
+      .option("kafka.bootstrap.servers", "kafka:9092")
+      .option("topic", "flight-delay-ml-response")
+      .option("checkpointLocation", "/tmp/kafka_checkpoint")
+      .outputMode("append")
+    
+    // run the Kafka query
+    println(">>> STARTING KAFKA WRITE STREAM...")
+    val kafkaQuery = kafkaStreamWriter.start()
+    println("✓✓✓ PREDICTIONS NOW POSTED TO KAFKA TOPIC 'flight-delay-ml-response' ✓✓✓\n")
+    
     // Console Output for predictions
+    println(">>> Configuring console output stream...")
 
     val consoleOutput = finalPredictions.writeStream
       .outputMode("append")
       .format("console")
       .start()
+    
+    println("\n" + "="*80)
+    println("*** ALL STREAMS ACTIVE - ENGINE READY FOR PREDICTIONS ***")
+    println("*** Listening for requests on: flight-delay-ml-request ***")
+    println("*** Sending results to: MongoDB + Kafka (flight-delay-ml-response) ***")
+    println("="*80 + "\n")
+    
     consoleOutput.awaitTermination()
   }
 

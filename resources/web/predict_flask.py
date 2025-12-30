@@ -12,6 +12,10 @@ import predict_utils
 # Set up Flask, Mongo and Elasticsearch
 app = Flask(__name__)
 
+# Initialize SocketIO
+from flask_socketio import SocketIO, emit, join_room
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
 client = MongoClient(host='mongo', port=27017, username='root', password='example', authSource='admin')
 
 from pyelasticsearch import ElasticSearch
@@ -24,11 +28,53 @@ import iso8601
 import datetime
 
 # Setup Kafka
-from kafka import KafkaProducer
+from kafka import KafkaProducer, KafkaConsumer
 producer = KafkaProducer(bootstrap_servers=['kafka:9092'],api_version=(0,10))
 PREDICTION_TOPIC = 'flight-delay-ml-request'
+RESPONSE_PREDICTION_TOPIC = 'flight-delay-ml-response'
 
 import uuid
+import threading
+
+# Kafka consumer background thread
+def kafka_consumer_thread():
+    """Background thread that consumes from Kafka response topic and emits to WebSocket clients"""
+    consumer = KafkaConsumer(
+        RESPONSE_PREDICTION_TOPIC,
+        bootstrap_servers=['kafka:9092'],
+        api_version=(0, 10),
+        value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+        auto_offset_reset='latest',
+        enable_auto_commit=True
+    )
+    
+    print(f"Kafka consumer thread started, listening to {RESPONSE_PREDICTION_TOPIC}")
+    
+    for message in consumer:
+        try:
+            prediction_result = message.value
+            request_id = prediction_result.get('UUID')
+            
+            if request_id:
+                print(f"Received prediction for UUID: {request_id}")
+                # Emit to the specific room (client waiting for this UUID)
+                socketio.emit('prediction_ready', prediction_result, room=request_id)
+        except Exception as e:
+            print(f"Error processing Kafka message: {e}")
+
+# Start the Kafka consumer in a background thread
+consumer_thread = threading.Thread(target=kafka_consumer_thread, daemon=True)
+consumer_thread.start()
+
+# WebSocket event handlers
+@socketio.on('join')
+def on_join(data):
+    """Handle client joining a room based on their request_id"""
+    request_id = data.get('request_id')
+    if request_id:
+        join_room(request_id)
+        print(f"Client joined room: {request_id}")
+        emit('joined', {'room': request_id})
 
 # Chapter 5 controller: Fetch a flight and display it
 @app.route("/on_time_performance")
@@ -538,8 +584,10 @@ def shutdown():
   return 'Server shutting down...'
 
 if __name__ == "__main__":
-    app.run(
+    socketio.run(
+    app,
     debug=True,
     host='0.0.0.0',
-    port='5001'
+    port='5001',
+    allow_unsafe_werkzeug=True
   )

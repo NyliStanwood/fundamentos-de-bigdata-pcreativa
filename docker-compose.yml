@@ -32,7 +32,7 @@ services:
     depends_on:
       - kafka
     entrypoint: /bin/sh
-    command: -c "sleep 10 && /opt/kafka/bin/kafka-topics.sh --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic flight-delay-ml-request --if-not-exists"
+    command: -c "sleep 10 && /opt/kafka/bin/kafka-topics.sh --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic flight-delay-ml-request --if-not-exists && /opt/kafka/bin/kafka-topics.sh --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic flight-delay-ml-response --if-not-exists"
     restart: on-failure
     logging:
       driver: json-file
@@ -71,26 +71,26 @@ services:
     networks:
       - flight-network
 
-  training:
-    build:
-      context: .
-      dockerfile: Dockerfile.training
-    container_name: ml-training
-    restart: on-failure
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    cpus: "1.0"
-    mem_limit: "2g"
-    pids_limit: 1024
-    volumes:
-      - ./resources:/resources
-      - ./data:/data
-      - ./models:/models
-    networks:
-      - flight-network
+  # training:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.training
+  #   container_name: ml-training
+  #   restart: on-failure
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   cpus: "1.0"
+  #   mem_limit: "2g"
+  #   pids_limit: 1024
+  #   volumes:
+  #     - ./resources:/resources
+  #     - ./data:/data
+  #     - ./models:/models
+  #   networks:
+  #     - flight-network
 
   # Spark Master
   spark-master:
@@ -152,38 +152,38 @@ services:
     networks:
       - flight-network
 
-  # Spark Worker 2
-  spark-worker-2:
-    build:
-      context: .
-      dockerfile: Dockerfile.spark-worker
-    image: spark-worker-2:3.5.3
-    container_name: spark-worker-2
-    depends_on:
-      - spark-master
-    ports:
-      - "8082:8081"
-    restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    cpus: "1.0"
-    mem_limit: "2g"
-    pids_limit: 2048
-    environment:
-      SPARK_MODE: worker
-      SPARK_MASTER_URL: spark://spark-master:7077
-      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
-      SPARK_RPC_ENCRYPTION_ENABLED: "no"
-      SPARK_SSL_ENABLED: "no"
-      SPARK_WORKER_CORES: "1"
-      SPARK_WORKER_MEMORY: "1g"
-    volumes:
-      - ./models:/practica_creativa/models
-    networks:
-      - flight-network
+  # # Spark Worker 2
+  # spark-worker-2:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.spark-worker
+  #   image: spark-worker-2:3.5.3
+  #   container_name: spark-worker-2
+  #   depends_on:
+  #     - spark-master
+  #   ports:
+  #     - "8082:8081"
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   cpus: "1.0"
+  #   mem_limit: "2g"
+  #   pids_limit: 2048
+  #   environment:
+  #     SPARK_MODE: worker
+  #     SPARK_MASTER_URL: spark://spark-master:7077
+  #     SPARK_RPC_AUTHENTICATION_ENABLED: "no"
+  #     SPARK_RPC_ENCRYPTION_ENABLED: "no"
+  #     SPARK_SSL_ENABLED: "no"
+  #     SPARK_WORKER_CORES: "1"
+  #     SPARK_WORKER_MEMORY: "1g"
+  #   volumes:
+  #     - ./models:/practica_creativa/models
+  #   networks:
+  #     - flight-network
 
   sparksubmit:
     build:
@@ -193,7 +193,7 @@ services:
     depends_on:
       - spark-master
       - spark-worker-1
-      - spark-worker-2
+      # - spark-worker-2
       - mongo
       - kafka
     restart: on-failure
