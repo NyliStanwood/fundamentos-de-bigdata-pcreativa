@@ -1,4 +1,4 @@
-# Dockerfile for Spark Master
+﻿# Dockerfile for Spark Master
 FROM apache/spark:3.5.3
 
 # Switch to root user

@@ -68,6 +68,7 @@ services:
     volumes:
       - mongo_data:/data/db
       - ./resources:/resources
+      - ./data:/data
     networks:
       - flight-network
 

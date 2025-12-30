@@ -1,4 +1,4 @@
-# MongoDB 7.0.x Dockerfile
+﻿# MongoDB 7.0.x Dockerfile
 FROM mongo:7.0
 
 # Install required utilities
@@ -31,4 +31,3 @@ RUN chmod +x /docker-entrypoint-initdb.d/mongo-init.sh
 # Default command
 # CMD ["mongod", "--bind_ip_all"]
 # CMD ["/bin/bash", "-c", "mongod --bind_ip_all & pid=$!; sleep 10; /resources/download_data.sh || true; /resources/import_distances.sh || true; wait $pid"]
-

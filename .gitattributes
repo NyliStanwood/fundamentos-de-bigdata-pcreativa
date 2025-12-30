@@ -1,0 +1,16 @@
+# Auto detect text files and normalize line endings to LF
+* text=auto
+
+# Shell scripts should always use LF
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Docker files should use LF
+Dockerfile* text eol=lf
+docker-compose.yml text eol=lf
+
+# Python should use LF
+*.py text eol=lf
+
+# Scala should use LF
+*.scala text eol=lf

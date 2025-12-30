@@ -1,4 +1,4 @@
-# Dockerfile for Spark Worker
+﻿# Dockerfile for Spark Worker
 FROM apache/spark:3.5.3
 
 # Switch to root user
