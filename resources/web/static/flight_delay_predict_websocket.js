@@ -16,6 +16,9 @@ socket.on("joined", function (data) {
   console.log("Joined room:", data.room);
 });
 
+// IMPORTANT HOOK:  !!!!
+// The server will emit "prediction_ready" event
+// when the prediction is done
 // Handle prediction results from WebSocket
 socket.on("prediction_ready", function (payload) {
   console.log("Prediction received:", payload);

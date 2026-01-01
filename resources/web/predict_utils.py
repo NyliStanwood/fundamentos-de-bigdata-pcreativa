@@ -1,5 +1,5 @@
 import sys, os, re
-import pymongo
+from cassandra.query import SimpleStatement  # Cassandra driver
 import datetime, iso8601
 
 def process_search(results):
@@ -31,14 +31,21 @@ def strip_place(url):
     return url
   return p
 
-def get_flight_distance(client, origin, dest):
-  """Get the distance between a pair of airport codes"""
-  query = {
-    "Origin": origin,
-    "Dest": dest,
-  }
-  record = client.agile_data_science.origin_dest_distances.find_one(query)
-  return record["Distance"]
+##
+#It takes a Cassandra session, origin, and destination airport codes, 
+# and runs a CQL query to fetch the Distance from the origin_dest_distances table. 
+# If a matching row is found, it returns the distance; otherwise, it returns None.
+##
+def get_flight_distance(session, origin, dest):
+  """
+  Get the distance between a pair of airport codes from Cassandra
+  Updated: Now uses Cassandra instead of MongoDB
+  """
+  query = "SELECT Distance FROM origin_dest_distances WHERE Origin=%s AND Dest=%s LIMIT 1"
+  row = session.execute(query, (origin, dest)).one()
+  if row and hasattr(row, 'distance'):
+    return row.distance
+  return None
 
 def get_regression_date_args(iso_date):
   """Given an ISO Date, return the day of year, day of month, day of week as the API expects them."""
