@@ -49,14 +49,25 @@ cqlsh "$HOST" -u cassandra -p "$ADMIN_PASS" -e "CREATE USER IF NOT EXISTS root W
 
 # Initialize schema
 echo "Initializing database schema..."
-KEYSPACE="agile_data_science"
-if [ -f /resources/cassandra_conf/table_origin_dest_distances.cql ]; then
-    cqlsh "$HOST" -u cassandra -p "$ADMIN_PASS" -e "CREATE KEYSPACE IF NOT EXISTS $KEYSPACE WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};"
 
-    cqlsh "$HOST" -k "$KEYSPACE" -u cassandra -p "$ADMIN_PASS" -f /resources/cassandra_conf/table_origin_dest_distances.cql
-    echo "Schema initialized successfully!"
+KEYSPACE="agile_data_science"
+SCHEMA1="/resources/cassandra_conf/table_origin_dest_distances.cql"
+SCHEMA2="/resources/cassandra_conf/table_flight_delay_ml_response.cql"
+
+cqlsh "$HOST" -u cassandra -p "$ADMIN_PASS" -e "CREATE KEYSPACE IF NOT EXISTS $KEYSPACE WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};"
+
+if [ -f "$SCHEMA1" ]; then
+    cqlsh "$HOST" -k "$KEYSPACE" -u cassandra -p "$ADMIN_PASS" -f "$SCHEMA1"
+    echo "Schema table_origin_dest_distances initialized successfully!"
 else
-    echo "Warning: Schema file not found at /resources/cassandra_conf/table_origin_dest_distances.cql"
+    echo "Warning: Schema file not found at $SCHEMA1"
+fi
+
+if [ -f "$SCHEMA2" ]; then
+    cqlsh "$HOST" -k "$KEYSPACE" -u cassandra -p "$ADMIN_PASS" -f "$SCHEMA2"
+    echo "Schema table_flight_delay_ml_response initialized successfully!"
+else
+    echo "Warning: Schema file not found at $SCHEMA2"
 fi
 
 echo "Running data download and import scripts..."

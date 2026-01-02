@@ -1,2 +1,11 @@
+docker exec -it cassandra cqlsh cassandra -u cassandra -p cassandra
+
 USE agile_data_science;
 SELECT * FROM origin_dest_distances LIMIT 10;
+
+DESCRIBE TABLE agile_data_science.flight_delay_ml_response;
+
+SELECT * FROM system_schema.columns WHERE keyspace_name = 'agile_data_science' AND table_name = 'flight_delay_ml_response';
+
+
+SELECT * FROM flight_delay_ml_response LIMIT 5;

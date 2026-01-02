@@ -52,9 +52,9 @@ services:
     image: cassandra-custom:4.1.10
     container_name: cassandra
     ports:
-      - "9042:9042"
-      - "7199:7199"
-      - "9160:9160"
+      - "9042:9042" # CQL
+      - "7199:7199" # JMX
+      - "9160:9160" # Thrift
     restart: unless-stopped
     logging:
       driver: json-file
@@ -85,32 +85,32 @@ services:
       retries: 5
       start_period: 60s
 
-  mongo:
-    build:
-      context: .
-      dockerfile: Dockerfile.mongo
-    image: mongo-custom:7.0
-    container_name: mongo
-    ports:
-      - "27017:27017"
-    restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    cpus: "2.0"
-    mem_limit: "2g"
-    pids_limit: 2048
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
-    volumes:
-      - mongo_data:/data/db
-      - ./resources:/resources
-      - ./data:/data
-    networks:
-      - flight-network
+  # mongo:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.mongo
+  #   image: mongo-custom:7.0
+  #   container_name: mongo
+  #   ports:
+  #     - "27017:27017"
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   cpus: "2.0"
+  #   mem_limit: "2g"
+  #   pids_limit: 2048
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: example
+  #   volumes:
+  #     - mongo_data:/data/db
+  #     - ./resources:/resources
+  #     - ./data:/data
+  #   networks:
+  #     - flight-network
 
   # training:
   #   build:
@@ -235,7 +235,8 @@ services:
       - spark-master
       - spark-worker-1
       - spark-worker-2
-      - mongo
+      # - mongo
+      - cassandra
       - kafka
     restart: on-failure
     logging:
@@ -263,7 +264,7 @@ services:
     image: python:3.9
     container_name: flask-app
     depends_on:
-      - mongo
+      # - mongo
       - kafka
       - kafka-init
     working_dir: /resources/web

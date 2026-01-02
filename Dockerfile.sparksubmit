@@ -64,7 +64,7 @@ ENV SPARK_MASTER_URL=spark://spark-master:7077
 
 # Default command: run spark-submit connecting to Spark cluster
 CMD spark-submit \
-     --class es.upm.dit.ging.predictor.MakePrediction \
-     --master $SPARK_MASTER_URL \
-     --packages org.mongodb.spark:mongo-spark-connector_2.12:10.4.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3 \
-     /practica_creativa/flight_prediction/target/scala-2.12/flight_prediction_2.12-0.1.jar
+    --class es.upm.dit.ging.predictor.MakePrediction \
+    --master $SPARK_MASTER_URL \
+    --packages com.datastax.spark:spark-cassandra-connector_2.12:3.5.1,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3 \
+    /practica_creativa/flight_prediction/target/scala-2.12/flight_prediction_2.12-0.1.jar

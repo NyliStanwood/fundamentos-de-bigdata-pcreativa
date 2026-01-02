@@ -1,10 +1,13 @@
 package es.upm.dit.ging.predictor
-import com.mongodb.spark._
+// import com.mongodb.spark._
 import org.apache.spark.ml.classification.RandomForestClassificationModel
 import org.apache.spark.ml.feature.{Bucketizer, StringIndexerModel, VectorAssembler}
 import org.apache.spark.sql.functions.{concat, from_json, lit, to_json, struct, col}
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import com.datastax.spark.connector._
+import com.datastax.spark.connector.cql.CassandraConnector
+
 
 object MakePrediction {
 
@@ -148,21 +151,57 @@ object MakePrediction {
     println("*** INITIATING OUTPUT STREAMS ***")
     println("="*80 + "\n")
 
-    // define a streaming query for MongoDB
-    println(">>> Configuring MongoDB output stream...")
-    val dataStreamWriter = finalPredictions
+    println(">>> Configuring Cassandra output stream...")
+
+    // Map DataFrame columns to match Cassandra schema (lowercase)
+    val cassandraMappedDF = finalPredictions.select(
+      col("UUID").as("uuid"),
+      col("Origin").as("origin"),
+      col("DayOfWeek").as("dayofweek"),
+      col("DayOfMonth").as("dayofmonth"),
+      col("DayOfYear").as("dayofyear"),
+      col("Dest").as("dest"),
+      col("DepDelay").as("depdelay"),
+      col("Timestamp").cast("string").as("timestamp"),
+      col("FlightDate").cast("string").as("flightdate"),
+      col("Carrier").as("carrier"),
+      col("Distance").as("distance"),
+      col("Route").as("route"),
+      col("Prediction").as("prediction")
+    )
+
+    // 2. Define the streaming query for Cassandra
+    val query = cassandraMappedDF
       .writeStream
-      .format("mongodb")
-      .option("spark.mongodb.connection.uri", "mongodb://root:example@mongo:27017/agile_data_science?authSource=admin")
-      .option("spark.mongodb.database", "agile_data_science")
-      .option("checkpointLocation", "/tmp")
-      .option("spark.mongodb.collection", "flight_delay_ml_response")
+      .format("org.apache.spark.sql.cassandra")
+      .option("keyspace", "agile_data_science")
+      .option("table", "flight_delay_ml_response")
+      .option("checkpointLocation", "/tmp/cassandra_checkpoint")
+      // Connection deets
+      .option("spark.cassandra.connection.host", "cassandra")
+      .option("spark.cassandra.connection.port", "9042")
+      .option("spark.cassandra.auth.username", "cassandra")
+      .option("spark.cassandra.auth.password", "cassandra")
       .outputMode("append")
+      .start()
+
+    println("✓✓✓ PREDICTIONS NOW SAVED TO CASSANDRA ✓✓✓\n")
+
+    // // define a streaming query for MongoDB
+    // println(">>> Configuring MongoDB output stream...")
+    // val dataStreamWriter = finalPredictions
+    //   .writeStream
+    //   .format("mongodb")
+    //   .option("spark.mongodb.connection.uri", "mongodb://root:example@mongo:27017/agile_data_science?authSource=admin")
+    //   .option("spark.mongodb.database", "agile_data_science")
+    //   .option("checkpointLocation", "/tmp")
+    //   .option("spark.mongodb.collection", "flight_delay_ml_response")
+    //   .outputMode("append")
     
-    // run the MongoDB query
-    println(">>> STARTING MONGODB WRITE STREAM...")
-    val query = dataStreamWriter.start()
-    println("✓✓✓ PREDICTIONS NOW POSTED TO MONGODB ✓✓✓\n")
+    // // run the MongoDB query
+    // println(">>> STARTING MONGODB WRITE STREAM...")
+    // val query = dataStreamWriter.start()
+    // println("✓✓✓ PREDICTIONS NOW POSTED TO MONGODB ✓✓✓\n")
 
     // Write predictions to Kafka topic
     println(">>> Configuring Kafka output stream...")
@@ -179,6 +218,7 @@ object MakePrediction {
     println(">>> STARTING KAFKA WRITE STREAM...")
     val kafkaQuery = kafkaStreamWriter.start()
     println("✓✓✓ PREDICTIONS NOW POSTED TO KAFKA TOPIC 'flight-delay-ml-response' ✓✓✓\n")
+    
     
     // Console Output for predictions
     println(">>> Configuring console output stream...")
