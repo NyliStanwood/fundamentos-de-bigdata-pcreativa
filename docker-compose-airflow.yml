@@ -1,10 +1,13 @@
 version: "3"
-x-airflow-common: &airflow-common
-  # In order to add custom dependencies or upgrade provider packages you can use your extended image.
-  # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
-  # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.4.2}
-  # build: .
+
+# Common Airflow configuration block
+x-airflow-common:
+  &airflow-common # Build a custom Airflow image from Dockerfile.airflow (based on apache/airflow:2.4.2)
+  build:
+    context: .
+    dockerfile: Dockerfile.airflow
+  image: custom-airflow:2.4.2
+  # Common environment variables for Airflow services
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
@@ -17,11 +20,17 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: "true"
     AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+  # Shared volumes for DAGs, logs, and plugins
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
+    - ./resources:/resources
+    - ./data:/data
+    - ./models:/models
+  # Set the user for file permissions (important for Linux)
   user: "${AIRFLOW_UID:-50000}:0"
+  # Common dependencies for Airflow services
   depends_on: &airflow-common-depends-on
     redis:
       condition: service_healthy
@@ -29,6 +38,7 @@ x-airflow-common: &airflow-common
       condition: service_healthy
 
 services:
+  # PostgreSQL database for Airflow metadata
   postgres:
     image: postgres:13
     environment:
@@ -43,6 +53,7 @@ services:
       retries: 5
     restart: always
 
+  # Redis broker for CeleryExecutor
   redis:
     image: redis:latest
     expose:
@@ -54,6 +65,7 @@ services:
       retries: 50
     restart: always
 
+  # Airflow Webserver UI
   airflow-webserver:
     <<: *airflow-common
     command: webserver
@@ -66,10 +78,11 @@ services:
       retries: 5
     restart: always
     depends_on:
-      <<: *airflow-common-depends-on
+      <<: *airflow-common-depends-on # to include redis and postgres
       airflow-init:
         condition: service_completed_successfully
 
+  # Airflow Scheduler (schedules DAG runs)
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
@@ -88,6 +101,7 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  # Airflow Celery Worker (executes tasks)
   airflow-worker:
     <<: *airflow-common
     command: celery worker
@@ -100,6 +114,7 @@ services:
       retries: 5
     environment:
       <<: *airflow-common-env
+      PROJECT_HOME: "/"
       # Required to handle warm shutdown of the celery workers properly
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
@@ -109,6 +124,7 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  # Airflow Triggerer (for deferrable operators)
   airflow-triggerer:
     <<: *airflow-common
     command: triggerer
@@ -127,6 +143,7 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  # Airflow Init (initializes Airflow DB and user)
   airflow-init:
     <<: *airflow-common
     entrypoint: /bin/bash
@@ -192,19 +209,27 @@ services:
         fi
         mkdir -p /sources/logs /sources/dags /sources/plugins
         chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        # Custom: copy setup.py
+        cp /sources/resources/airflow/setup.py /sources/dags/
         exec /entrypoint airflow version
     # yamllint enable rule:line-length
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_UPGRADE: "true"
       _AIRFLOW_WWW_USER_CREATE: "true"
-      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
-      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      # Airflow web UI admin user configuration
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: airflow
+      _AIRFLOW_WWW_USER_FIRSTNAME: Marilyn
+      _AIRFLOW_WWW_USER_LASTNAME: SMartinez
+      _AIRFLOW_WWW_USER_ROLE: Admin
+      _AIRFLOW_WWW_USER_EMAIL: marilyn.smartinez@alumnos.upm.es
       _PIP_ADDITIONAL_REQUIREMENTS: ""
     user: "0:0"
     volumes:
       - .:/sources
 
+  # Airflow CLI (for debugging and manual commands)
   airflow-cli:
     <<: *airflow-common
     profiles:
@@ -221,6 +246,7 @@ services:
   # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
   # or by explicitly targeted on the command line e.g. docker-compose up flower.
   # See: https://docs.docker.com/compose/profiles/
+  # Flower UI for monitoring Celery workers (optional)
   flower:
     <<: *airflow-common
     command: celery flower
@@ -239,5 +265,6 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+# Named Docker volume for persistent PostgreSQL data
 volumes:
   postgres-db-volume:

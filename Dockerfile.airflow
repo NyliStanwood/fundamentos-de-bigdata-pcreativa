@@ -1,0 +1,50 @@
+﻿# Dockerfile for custom Airflow image (based on apache/airflow:2.4.2)
+# This Dockerfile allows you to add custom dependencies or files as needed.
+
+FROM apache/airflow:2.4.2
+
+
+USER root
+RUN apt-get update && \
+    apt-get install -y curl zip unzip wget procps && \
+    rm -rf /var/lib/apt/lists/*
+
+
+
+USER airflow
+
+
+# Install SDKMAN and Java 8 as airflow user
+RUN curl -s "https://get.sdkman.io" | bash && \
+	bash -c "source /home/airflow/.sdkman/bin/sdkman-init.sh && \
+	sdk install java 8.0.302-open && \
+	sdk default java 8.0.302-open"
+
+# Copy requirements and constraints files
+COPY requirements_training.txt requirements.txt
+COPY resources/airflow/constraints.txt constraints.txt
+
+# Install Python dependencies with constraints
+RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
+
+# Set JAVA_HOME and JDK_HOME environment variables for airflow user
+ENV JAVA_HOME=/home/airflow/.sdkman/candidates/java/8.0.302-open
+ENV JDK_HOME=/home/airflow/.sdkman/candidates/java/8.0.302-open
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Install Spark 3.5.3
+WORKDIR /home/airflow
+ENV SPARK_VERSION=3.5.3
+ENV HADOOP_VERSION=3
+ENV SPARK_HOME=/home/airflow/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-*-src.zip
+
+RUN wget -q https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
+	tar -xzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
+	mv spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} ${SPARK_HOME} && \
+	rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+
+# By default, use Airflow's entrypoint
+ENTRYPOINT ["/entrypoint"]
+CMD ["bash"]

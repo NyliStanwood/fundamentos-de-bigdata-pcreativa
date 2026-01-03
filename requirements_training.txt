@@ -6,6 +6,7 @@
 # findspark - Helps find Spark installation
 findspark
 numpy
+iso8601
 
 # Note: The following standard library modules are used but don't need installation:
 # - sys (built-in)
