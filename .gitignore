@@ -119,7 +119,6 @@ lib/
 metals.sbt
 
 # Docker & Containerization
-.dockerignore
 .docker/
 
 # Environment & Config (if containing secrets)
@@ -145,11 +144,4 @@ airflow/logs/
 airflow/plugins/
 airflow/dags/__pycache__/
 flight_prediction/project/project/project/target/config-classes/$9c436159ad694f738665.cache
-
-dags/__pycache__/*
-logs/**/*
-logs/**/**/*
-logs/**/**/**/*
-logs/**/**/**/**/*
-logs/**/**/**/**/**/*
-logs/scheduler/2026-01-02/native_dags/example_dags/example_branch_day_of_week_operator.py.log
+dagss/setup.py

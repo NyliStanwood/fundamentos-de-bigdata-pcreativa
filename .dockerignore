@@ -12,3 +12,4 @@ zeppelin
 elasticsearch-hadoop
 models
 lib
+logs/scheduler/latest

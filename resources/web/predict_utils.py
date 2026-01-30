@@ -41,6 +41,8 @@ def get_flight_distance(session, origin, dest):
   Get the distance between a pair of airport codes from Cassandra
   Updated: Now uses Cassandra instead of MongoDB
   """
+  if not origin or not dest:
+    return None
   query = "SELECT Distance FROM origin_dest_distances WHERE Origin=%s AND Dest=%s LIMIT 1"
   row = session.execute(query, (origin, dest)).one()
   if row and hasattr(row, 'distance'):
@@ -49,15 +51,20 @@ def get_flight_distance(session, origin, dest):
 
 def get_regression_date_args(iso_date):
   """Given an ISO Date, return the day of year, day of month, day of week as the API expects them."""
-  dt = iso8601.parse_date(iso_date)
-  day_of_year = dt.timetuple().tm_yday
-  day_of_month = dt.day
-  day_of_week = dt.weekday()
-  return {
-    "DayOfYear": day_of_year,
-    "DayOfMonth": day_of_month,
-    "DayOfWeek": day_of_week,
-  }
+  if not iso_date or not isinstance(iso_date, str):
+    return {}
+  try:
+    dt = iso8601.parse_date(iso_date)
+    day_of_year = dt.timetuple().tm_yday
+    day_of_month = dt.day
+    day_of_week = dt.weekday()
+    return {
+      "DayOfYear": day_of_year,
+      "DayOfMonth": day_of_month,
+      "DayOfWeek": day_of_week,
+    }
+  except iso8601.ParseError:
+    return {}
 
 def get_current_timestamp():
   iso_now = datetime.datetime.now().isoformat()

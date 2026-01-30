@@ -3,14 +3,18 @@ FROM cassandra:4.1.10
 # Install required tools for initialization
 RUN apt-get update && apt-get install -y \
     curl \
-    netcat \
+    netcat-openbsd \
     python3 \
     python3-pip \
-    && pip3 install --no-cache-dir cassandra-driver \
+    && pip3 install --no-cache-dir --break-system-packages cassandra-driver \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy custom cassandra configuration from resources directory
 COPY resources/cassandra_conf/cassandra.yaml /etc/cassandra/cassandra.yaml
+
+# Copy the init script and make it executable
+COPY resources/cassandra_conf/cassandra-init.sh /cassandra-init.sh
+RUN chmod +x /cassandra-init.sh
 
 # Expose ports
 # 9042: CQL native transport port
@@ -26,5 +30,5 @@ ENV CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
 ENV MAX_HEAP_SIZE=512M
 ENV HEAP_NEWSIZE=128M
 
-# Run init script from mounted volume
-ENTRYPOINT ["/resources/cassandra_conf/cassandra-init.sh"]
+# Run init script
+ENTRYPOINT ["/cassandra-init.sh"]

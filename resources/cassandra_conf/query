@@ -9,3 +9,5 @@ SELECT * FROM system_schema.columns WHERE keyspace_name = 'agile_data_science' A
 
 
 SELECT * FROM flight_delay_ml_response LIMIT 5;
+SELECT * FROM origin_dest_distances LIMIT 5;
+origin_dest_distances

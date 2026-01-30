@@ -208,6 +208,7 @@ services:
           echo
         fi
         mkdir -p /sources/logs /sources/dags /sources/plugins
+        chown -R "${AIRFLOW_UID:-50000}:0" /sources/{logs,dags,plugins}
         chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
         # Custom: copy setup.py
         cp /sources/resources/airflow/setup.py /sources/dags/
