@@ -44,7 +44,8 @@ RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
 # Set JAVA_HOME and JDK_HOME environment variables for airflow user
 ENV JAVA_HOME=/home/airflow/.sdkman/candidates/java/8.0.302-open
 ENV JDK_HOME=/home/airflow/.sdkman/candidates/java/8.0.302-open
-ENV PATH=$JAVA_HOME/bin:$PATH
+ENV PATH=$JAVA_HOME/bin:/home/airflow/.local/bin:$PATH
+ENV PYTHONPATH=/home/airflow/.local/lib/python3.9/site-packages
 
 # Install Spark 3.5.3
 WORKDIR /home/airflow
