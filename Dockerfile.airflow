@@ -3,16 +3,20 @@
 
 FROM apache/airflow:2.4.2
 
-
 USER root
 RUN apt-get update && \
     apt-get install -y curl zip unzip wget procps && \
     rm -rf /var/lib/apt/lists/*
 
+RUN groupadd --gid 50000 airflow && \
+    usermod --uid 50000 --gid 50000 airflow && \
+    mkdir -p /data /models && \
+    chown -R airflow:airflow /data /models
 
+COPY /resources/download_data.sh /docker-entrypoint-initdb.d/
+RUN chmod +x /docker-entrypoint-initdb.d/download_data.sh
 
 USER airflow
-
 
 # Install SDKMAN and Java 8 as airflow user
 RUN curl -s "https://get.sdkman.io" | bash && \
@@ -24,21 +28,8 @@ RUN curl -s "https://get.sdkman.io" | bash && \
 COPY requirements_training.txt requirements.txt
 COPY resources/airflow/constraints.txt constraints.txt
 
-# Create directories for data downloads with proper permissions
-USER root
-RUN groupadd --gid 50000 airflow && \
-    usermod --uid 50000 --gid 50000 airflow && \
-    mkdir -p /data /models && \
-    chown -R airflow:airflow /data /models
-USER airflow
-
-# Copy initialization script that runs after MongoDB starts with auth
-USER root
-COPY /resources/download_data.sh /docker-entrypoint-initdb.d/
-RUN chmod +x /docker-entrypoint-initdb.d/download_data.sh
-USER airflow
-
 # Install Python dependencies with constraints
+RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
 RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
 
 # Set JAVA_HOME and JDK_HOME environment variables for airflow user
