@@ -209,7 +209,9 @@ services:
         fi
         mkdir -p /sources/logs /sources/dags /sources/plugins
         chown -R "${AIRFLOW_UID:-50000}:0" /sources/{logs,dags,plugins}
-        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        # Custom: Set ownership for data and models directories
+        mkdir -p /sources/data /sources/models
+        chown -R "${AIRFLOW_UID:-50000}:0" /sources/data /sources/models
         # Custom: copy setup.py
         cp /sources/resources/airflow/setup.py /sources/dags/
         /sources/resources/download_data.sh
